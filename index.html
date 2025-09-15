@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Secret Arcade Hub — local</title>
+<style>
+  :root{
+    --bg1: #1e3c72;
+    --bg2: #2a5298;
+    --accent: #ff7e5f;
+    --glass: rgba(255,255,255,0.08);
+    --white: #ffffff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: linear-gradient(120deg,var(--bg1),var(--bg2));
+    color:var(--white);
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:28px;
+    transition:background .45s;
+  }
+
+  /* container */
+  .wrapper{
+    width:100%;
+    max-width:980px;
+    text-align:center;
+  }
+  h1{font-size:2.2rem;margin:0 0 8px}
+  p.lead{opacity:.9;margin:6px 0 18px}
+
+  /* passcode box */
+  #passbox{
+    background:var(--glass);
+    padding:22px;
+    border-radius:14px;
+    display:inline-block;
+    margin-bottom:18px;
+    box-shadow:0 10px 30px rgba(0,0,0,.3);
+  }
+  input[type="password"], input[type="text"]{
+    padding:10px 12px;
+    border-radius:10px;
+    border: none;
+    outline: none;
+    width:220px;
+    margin-right:8px;
+    font-size:1rem;
+  }
+  button{
+    background:var(--accent);
+    border:none;
+    color:white;
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    transition:transform .15s ease, box-shadow .15s;
+  }
+  button:hover{ transform:translateY(-2px); box-shadow:0 8px 22px rgba(0,0,0,.25) }
+
+  /* content */
+  #content{
+    display:none;
+    margin-top:18px;
+  }
+  .grid{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .card{
+    width:300px;
+    background:rgba(255,255,255,0.06);
+    border-radius:12px;
+    padding:18px;
+    text-align:center;
+    backdrop-filter: blur(6px);
+  }
+  .card h3{margin:6px 0 10px}
+  .btn-row{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px}
+
+  /* tic tac toe */
+  .ttt-board{display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; justify-items:center}
+  .ttt-board button{width:66px;height:66px;font-size:1.4rem;border-radius:8px;border:none; cursor:pointer; background:rgba(255,255,255,0.06); color:var(--white)}
+  .small{font-size:.9rem;padding:8px 10px}
+
+  /* admin UI (top-right) */
+  #adminBtn{
+    position:fixed;
+    top:16px;
+    right:16px;
+    background:transparent;
+    border:2px solid rgba(255,255,255,0.12);
+    color:var(--white);
+    padding:8px 10px;
+    border-radius:10px;
+    cursor:pointer;
+    display:none; /* appears after passcode success */
+  }
+  #secretButtonDiv{display:none;margin-top:12px}
+
+  /* responsive */
+  @media (max-width:680px){
+    .card{width:92%}
+    input[type="password"]{width:140px}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <h1>🎮 Secret Arcade Hub</h1>
+  <p class="lead">A safe, local arcade portal — enter the passcode to enter the hidden lounge.</p>
+
+  <!-- PASSCODE BOX -->
+  <div id="passbox">
+    <label for="pass">Enter passcode:</label>
+    <input id="pass" type="password" placeholder="Passcode" />
+    <button id="enterBtn">Enter</button>
+    <div id="passMsg" style="color:#ffcccb;margin-top:8px;min-height:1em"></div>
+  </div>
+
+  <!-- Content (hidden until passcode correct) -->
+  <div id="content">
+    <h2>Welcome — you're in.</h2>
+
+    <div class="grid">
+      <!-- Tic-Tac-Toe -->
+      <div class="card">
+        <h3>Tic-Tac-Toe</h3>
+        <div id="ticTacToeBoard" class="ttt-board"></div>
+        <div class="btn-row">
+          <button class="small" id="resetTttBtn">Reset</button>
+        </div>
+      </div>
+
+      <!-- RPS -->
+      <div class="card">
+        <h3>Rock Paper Scissors</h3>
+        <div class="btn-row">
+          <button onclick="playRPS('rock')">Rock</button>
+          <button onclick="playRPS('paper')">Paper</button>
+          <button onclick="playRPS('scissors')">Scissors</button>
+        </div>
+        <p id="rpsResult" style="margin-top:10px"></p>
+      </div>
+
+      <!-- Roblox -->
+      <div class="card">
+        <h3>Roblox</h3>
+        <p>Opens Roblox in a new tab</p>
+        <div class="btn-row">
+          <a href="https://www.roblox.com/games" target="_blank"><button>Play Roblox</button></a>
+        </div>
+      </div>
+
+      <!-- Driving games -->
+      <div class="card">
+        <h3>Driving Games</h3>
+        <p>Browser driving games (external)</p>
+        <div class="btn-row">
+          <a href="https://www.crazygames.com/t/driving" target="_blank"><button>Drive</button></a>
+          <a href="https://www.crazygames.com/game/stunt-drift" target="_blank"><button>Stunt Drift</button></a>
+        </div>
+      </div>
+
+      <!-- Poxel.io (new) -->
+      <div class="card">
+        <h3>Poxel.io</h3>
+        <p>Pixel-style multiplayer FPS — opens official site or CrazyGames mirror.</p>
+        <div class="btn-row">
+          <a href="https://poxel.io/" target="_blank"><button>Play Poxel (official)</button></a>
+          <a href="https://www.crazygames.com/game/poxel-io" target="_blank"><button>Play Poxel (CrazyGames)</button></a>
+        </div>
+      </div>
+
+      <!-- YouTube embed -->
+      <div class="card">
+        <h3>YouTube</h3>
+        <p>Watch a video right here</p>
+        <!-- change the video ID below to your preferred video -->
+        <iframe width="260" height="150" src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+      </div>
+
+      <!-- Secret admin card (revealed only to admin) -->
+      <div class="card" id="secretButtonDiv">
+        <h3>👁️ Admin Console</h3>
+        <p>Admin-only controls</p>
+        <div class="btn-row">
+          <button id="selfDestructBtn" style="background:#d64545">Activate Self-Destruct</button>
+        </div>
+        <p style="font-size:.85rem;margin-top:8px;opacity:.85">(Simulated — clears page and redirects)</p>
+      </div>
+
+    </div>
+  </div>
+
+  <p style="opacity:.8;margin-top:18px;font-size:.9rem">Tip: save this file as <code>index.html</code> and open it in your browser. Edit keys in the script comments.</p>
+</div>
+
+<!-- Admin login button (top-right) -->
+<button id="adminBtn" title="Admin login">Admin</button>
+
+<script>
+/* --------------------------
+   CONFIG - change these:
+   -------------------------- */
+const PASSCODE = "friends";     // passcode that opens the hub
+const ADMIN_KEY = "onlyme123";  // change to a secret only you know
+const REDIRECT_URL = "https://www.example.com"; // where to go after "self-destruct"
+/* -------------------------- */
+
+/* Elements */
+const passInput = document.getElementById('pass');
+const enterBtn = document.getElementById('enterBtn');
+const passMsg = document.getElementById('passMsg');
+const content = document.getElementById('content');
+const adminBtn = document.getElementById('adminBtn');
+const secretButtonDiv = document.getElementById('secretButtonDiv');
+const selfDestructBtn = document.getElementById('selfDestructBtn');
+
+/* PASSCODE logic */
+enterBtn.addEventListener('click', tryPasscode);
+passInput.addEventListener('keyup', (e) => { if(e.key === 'Enter') tryPasscode(); });
+
+function tryPasscode(){
+  const val = passInput.value.trim();
+  if(val === PASSCODE){
+    passMsg.textContent = "";
+    document.getElementById('passbox').style.display = 'none';
+    content.style.display = 'block';
+    // show admin login UI so you can reveal the secret button when needed
+    adminBtn.style.display = 'inline-block';
+    // gentle bg change to signal access granted
+    document.body.style.background = 'linear-gradient(120deg,#11998e,#38ef7d)';
+  } else {
+    passMsg.textContent = "Wrong passcode — try again.";
+  }
+}
+
+/* ADMIN login flow:
+   - Admin button appears only after passcode success.
+   - Click Admin -> prompt for admin key -> reveal admin console if correct.
+*/
+adminBtn.addEventListener('click', () => {
+  const key = prompt("Enter admin key:");
+  if(!key) return;
+  if(key === ADMIN_KEY){
+    secretButtonDiv.style.display = 'block';
+    adminBtn.textContent = "Admin ✓";
+    adminBtn.disabled = true;
+    adminBtn.style.opacity = .8;
+    alert("Admin access granted.");
+  } else {
+    alert("Admin key incorrect.");
+  }
+});
+
+/* ====== GAMES ====== */
+
+/* --- Tic-Tac-Toe --- */
+let tttBoard = Array(9).fill('');
+let xTurn = true;
+const tttBoardEl = document.getElementById('ticTacToeBoard');
+const resetTttBtn = document.getElementById('resetTttBtn');
+
+function renderTtt(){
+  tttBoardEl.innerHTML = '';
+  for(let i=0;i<9;i++){
+    const btn = document.createElement('button');
+    btn.textContent = tttBoard[i];
+    btn.addEventListener('click', () => {
+      if(!tttBoard[i]){
+        tttBoard[i] = xTurn ? 'X' : 'O';
+        xTurn = !xTurn;
+        renderTtt();
+        checkTttWinner();
+      }
+    });
+    tttBoardEl.appendChild(btn);
+  }
+}
+resetTttBtn.addEventListener('click', () => {
+  tttBoard = Array(9).fill(''); xTurn = true; renderTtt();
+});
+
+function checkTttWinner(){
+  const combos = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+  for(const [a,b,c] of combos){
+    if(tttBoard[a] && tttBoard[a] === tttBoard[b] && tttBoard[a] === tttBoard[c]){
+      setTimeout(()=>alert(`${tttBoard[a]} wins!`), 50);
+      setTimeout(()=>{ tttBoard = Array(9).fill(''); xTurn=true; renderTtt(); }, 100);
+      return;
+    }
+  }
+}
+renderTtt();
+
+/* --- Rock Paper Scissors --- */
+function playRPS(user){
+  const choices = ['rock','paper','scissors'];
+  const comp = choices[Math.floor(Math.random()*3)];
+  let result = '';
+  if(user === comp) result = "It's a tie!";
+  else if((user==='rock'&&comp==='scissors')||(user==='paper'&&comp==='rock')||(user==='scissors'&&comp==='paper')) result="You win!";
+  else result = "You lose!";
+  document.getElementById('rpsResult').textContent = `Computer chose ${comp}. ${result}`;
+}
+
+/* ===== ADMIN: Simulated self-destruct =====
+   Behavior:
+   - Only visible after admin key correct
+   - Clicking will:
+     1) wipe page content (simulated)
+     2) show a dramatic message
+     3) after a short delay, redirect to REDIRECT_URL
+   NOTE: This is purely client-side and safe. No files are harmed.
+*/
+selfDestructBtn.addEventListener('click', () => {
+  const confirm1 = confirm("WARNING: Activate Self-Destruct? This will clear the page and redirect. Continue?");
+  if(!confirm1) return;
+  // visual dramatic sequence
+  document.documentElement.style.transition = 'background .6s';
+  document.documentElement.style.background = '#000';
+  // clear body and show message
+  document.body.innerHTML = '';
+  document.body.style.background = '#000';
+  document.body.style.color = '#fff';
+  const msg = document.createElement('div');
+  msg.style.textAlign = 'center';
+  msg.style.marginTop = '8vh';
+  msg.innerHTML = "<h1 style='font-size:2.2rem;margin-bottom:8px'>💥 Self-Destruct Activated 💥</h1>"
+                + "<p style='opacity:.85;margin-bottom:18px;'>System clearing... preparing redirect.</p>"
+                + "<p style='font-size:.9rem;opacity:.8'>If this was a mistake, close the tab now.</p>";
+  document.body.appendChild(msg);
+
+  // after short delay, redirect to the chosen URL
+  setTimeout(() => {
+    // final splash then redirect
+    window.location.href = REDIRECT_URL;
+  }, 2800);
+});
+
+/* ===== NOTES =====
+ - To change passcode: edit PASSCODE above.
+ - To change admin key: edit ADMIN_KEY above.
+ - To change redirect target after self-destruct: edit REDIRECT_URL above.
+ - This file is fully local; no server required. Save as index.html and open.
+*/
+</script>
+</body>
+</html>
